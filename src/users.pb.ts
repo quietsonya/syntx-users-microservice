@@ -27,6 +27,18 @@ export interface CreateUserRequest {
   salt: string;
 }
 
+export interface UpdateUserRequest {
+  userId: string;
+  email?: string | undefined;
+  username?: string | undefined;
+  password?: string | undefined;
+  salt?: string | undefined;
+}
+
+export interface DeleteUserRequest {
+  userId: string;
+}
+
 export const USERS_PACKAGE_NAME = "users";
 
 export interface UsersServiceClient {
@@ -35,6 +47,10 @@ export interface UsersServiceClient {
   getUserById(request: UserIdRequest): Observable<User>;
 
   createUser(request: CreateUserRequest): Observable<User>;
+
+  updateUser(request: UpdateUserRequest): Observable<User>;
+
+  deleteUser(request: DeleteUserRequest): Observable<User>;
 }
 
 export interface UsersServiceController {
@@ -45,11 +61,25 @@ export interface UsersServiceController {
   createUser(
     request: CreateUserRequest
   ): Promise<User> | Observable<User> | User;
+
+  updateUser(
+    request: UpdateUserRequest
+  ): Promise<User> | Observable<User> | User;
+
+  deleteUser(
+    request: DeleteUserRequest
+  ): Promise<User> | Observable<User> | User;
 }
 
 export function UsersServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getUsers", "getUserById", "createUser"];
+    const grpcMethods: string[] = [
+      "getUsers",
+      "getUserById",
+      "createUser",
+      "updateUser",
+      "deleteUser",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
         constructor.prototype,
