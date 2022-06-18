@@ -15,7 +15,7 @@ export class User {
     @Column({ type: 'char', length: 60 })
         password: string
 
-    @Column({ type: 'varchar', length: 60 })
+    @Column({ type: 'varchar', length: 22 })
         salt: string
 
 }
