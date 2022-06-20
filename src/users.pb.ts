@@ -16,8 +16,12 @@ export interface User {
   salt: string;
 }
 
-export interface UserIdRequest {
+export interface UserByIdRequest {
   userId: string;
+}
+
+export interface UserByEmailRequest {
+  email: string;
 }
 
 export interface CreateUserRequest {
@@ -44,7 +48,9 @@ export const USERS_PACKAGE_NAME = "users";
 export interface UsersServiceClient {
   getUsers(request: Void): Observable<User>;
 
-  getUserById(request: UserIdRequest): Observable<User>;
+  getUserById(request: UserByIdRequest): Observable<User>;
+
+  getUserByEmail(request: UserByEmailRequest): Observable<User>;
 
   createUser(request: CreateUserRequest): Observable<User>;
 
@@ -56,7 +62,13 @@ export interface UsersServiceClient {
 export interface UsersServiceController {
   getUsers(request: Void): Observable<User>;
 
-  getUserById(request: UserIdRequest): Promise<User> | Observable<User> | User;
+  getUserById(
+    request: UserByIdRequest
+  ): Promise<User> | Observable<User> | User;
+
+  getUserByEmail(
+    request: UserByEmailRequest
+  ): Promise<User> | Observable<User> | User;
 
   createUser(
     request: CreateUserRequest
@@ -76,6 +88,7 @@ export function UsersServiceControllerMethods() {
     const grpcMethods: string[] = [
       "getUsers",
       "getUserById",
+      "getUserByEmail",
       "createUser",
       "updateUser",
       "deleteUser",

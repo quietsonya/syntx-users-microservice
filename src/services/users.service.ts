@@ -6,6 +6,7 @@ import { User } from 'src/entities/user.entity'
 import { Repository } from 'typeorm'
 import { DeleteUserDto } from 'src/dto/delete-user.dto'
 import { UpdateUserDto } from 'src/dto/update-user.dto'
+import { GetUserByEmailDto } from 'src/dto/get-user-by-email.dto'
 
 
 @Injectable()
@@ -17,6 +18,10 @@ export class UsersService {
 
     public async getUserById({ userId }: GetUserByIdDto): Promise<User> {
         return this.userRepo.findOneBy({ id: userId })
+    }
+
+    public async getUserByEmail({ email }: GetUserByEmailDto): Promise<User> {
+        return this.userRepo.findOneBy({ email: email })
     }
 
     public async getUsers(): Promise<User[]> {

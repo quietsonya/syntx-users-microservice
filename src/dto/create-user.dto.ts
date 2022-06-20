@@ -10,11 +10,11 @@ export class CreateUserDto {
 
     @IsString()
     @MinLength(6)
-    @MaxLength(32)
+    @MaxLength(60)
         password: string
 
     @IsString()
-    @MaxLength(60)
+    @MaxLength(2)
         salt: string
 
 }

@@ -7,6 +7,7 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { concatMap, from, Observable } from 'rxjs'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { DeleteUserDto } from './dto/delete-user.dto'
+import { GetUserByEmailDto } from './dto/get-user-by-email.dto'
 
 @Controller()
 export class UsersController implements UsersServiceController {
@@ -17,6 +18,11 @@ export class UsersController implements UsersServiceController {
     @GrpcMethod(USERS_SERVICE_NAME, 'getUserById')
     public getUserById(dto: GetUserByIdDto): Observable<ProtoUser> {
         return from(this.usersService.getUserById(dto))
+    }
+
+    @GrpcMethod(USERS_SERVICE_NAME, 'getUserByEmail')
+    public getUserByEmail(dto: GetUserByEmailDto): Observable<ProtoUser> {
+        return from(this.usersService.getUserByEmail(dto))
     }
 
     @GrpcMethod(USERS_SERVICE_NAME, 'getUsers')
