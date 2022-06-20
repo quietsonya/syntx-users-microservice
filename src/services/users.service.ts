@@ -1,12 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { CreateUserDto } from 'src/dto/create-user.dto'
-import { GetUserByIdDto } from 'src/dto/get-user-by-id.dto'
 import 'dotenv/config'
 import { User } from 'src/entities/user.entity'
 import { Repository } from 'typeorm'
-import { DeleteUserDto } from 'src/dto/delete-user.dto'
-import { UpdateUserDto } from 'src/dto/update-user.dto'
-import { GetUserByEmailDto } from 'src/dto/get-user-by-email.dto'
+import {
+    UserByIdRequest,
+    UserByEmailRequest,
+    CreateUserRequest,
+    DeleteUserRequest,
+    UpdateUserRequest,
+} from '../users.pb'
 
 
 @Injectable()
@@ -16,11 +18,11 @@ export class UsersService {
         @Inject('USER_REPO') private readonly userRepo: Repository<User>
     ) {}
 
-    public async getUserById({ userId }: GetUserByIdDto): Promise<User> {
+    public async getUserById({ userId }: UserByIdRequest): Promise<User> {
         return this.userRepo.findOneBy({ id: userId })
     }
 
-    public async getUserByEmail({ email }: GetUserByEmailDto): Promise<User> {
+    public async getUserByEmail({ email }: UserByEmailRequest): Promise<User> {
         return this.userRepo.findOneBy({ email: email })
     }
 
@@ -28,7 +30,7 @@ export class UsersService {
         return this.userRepo.find()
     }
 
-    public async createUser(dto: CreateUserDto): Promise<User> {
+    public async createUser(dto: CreateUserRequest): Promise<User> {
         const user = new User()
         user.email = dto.email
         user.username = dto.username
@@ -38,7 +40,7 @@ export class UsersService {
         return user
     }
 
-    public async updateUser(dto: UpdateUserDto): Promise<User> {
+    public async updateUser(dto: UpdateUserRequest): Promise<User> {
         const user = await this.userRepo.findOneBy({ id: dto.userId })
         user.email = dto.email
         user.username = dto.username
@@ -48,7 +50,7 @@ export class UsersService {
         return user
     }
 
-    public async deleteUser({ userId }: DeleteUserDto): Promise<User> {
+    public async deleteUser({ userId }: DeleteUserRequest): Promise<User> {
         const user: User = await this.userRepo.findOneBy({ id: userId })
         await this.userRepo.delete(user)
         return user
