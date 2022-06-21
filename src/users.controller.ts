@@ -1,13 +1,17 @@
 import { Controller, Inject } from '@nestjs/common'
 import { GrpcMethod } from '@nestjs/microservices'
-import { USERS_SERVICE_NAME, User as ProtoUser, UsersServiceController } from './users.pb'
+import {
+    USERS_SERVICE_NAME,
+    User as ProtoUser,
+    UsersServiceController,
+    UserByIdRequest,
+    UserByEmailRequest,
+    CreateUserRequest,
+    UpdateUserRequest,
+    DeleteUserRequest
+} from './users.pb'
 import { UsersService } from './services/users.service'
-import { GetUserByIdDto } from './dto/get-user-by-id.dto'
-import { CreateUserDto } from './dto/create-user.dto'
 import { concatMap, from, Observable } from 'rxjs'
-import { UpdateUserDto } from './dto/update-user.dto'
-import { DeleteUserDto } from './dto/delete-user.dto'
-import { GetUserByEmailDto } from './dto/get-user-by-email.dto'
 
 @Controller()
 export class UsersController implements UsersServiceController {
@@ -16,12 +20,12 @@ export class UsersController implements UsersServiceController {
     private readonly usersService: UsersService
 
     @GrpcMethod(USERS_SERVICE_NAME, 'getUserById')
-    public getUserById(dto: GetUserByIdDto): Observable<ProtoUser> {
+    public getUserById(dto: UserByIdRequest): Observable<ProtoUser> {
         return from(this.usersService.getUserById(dto))
     }
 
     @GrpcMethod(USERS_SERVICE_NAME, 'getUserByEmail')
-    public getUserByEmail(dto: GetUserByEmailDto): Observable<ProtoUser> {
+    public getUserByEmail(dto: UserByEmailRequest): Observable<ProtoUser> {
         return from(this.usersService.getUserByEmail(dto))
     }
 
@@ -31,17 +35,17 @@ export class UsersController implements UsersServiceController {
     }
 
     @GrpcMethod(USERS_SERVICE_NAME, 'createUser')
-    public createUser(dto: CreateUserDto): Observable<ProtoUser> {
+    public createUser(dto: CreateUserRequest): Observable<ProtoUser> {
         return from(this.usersService.createUser(dto))
     }
 
     @GrpcMethod(USERS_SERVICE_NAME, 'updateUser')
-    public updateUser(dto: UpdateUserDto): Observable<ProtoUser> {
+    public updateUser(dto: UpdateUserRequest): Observable<ProtoUser> {
         return from(this.usersService.updateUser(dto))
     }
 
     @GrpcMethod(USERS_SERVICE_NAME, 'deleteUser')
-    public deleteUser(dto: DeleteUserDto): Observable<ProtoUser> {
+    public deleteUser(dto: DeleteUserRequest): Observable<ProtoUser> {
         return from(this.usersService.deleteUser(dto))
     }
 
