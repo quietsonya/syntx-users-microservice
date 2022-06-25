@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { UsersService } from './services/users.service'
 import { UsersController } from './users.controller'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import 'dotenv/config'
 import { DataSource } from 'typeorm'
 import { User } from './entities/user.entity'
@@ -16,14 +16,15 @@ import { User } from './entities/user.entity'
     providers: [
         UsersService,
         {
+            inject: [ ConfigService ],
             provide: 'DATA_SOURCE',
-            useFactory: async () => new DataSource({
+            useFactory: async (config: ConfigService) => new DataSource({
                 type: 'postgres',
-                host: process.env.POSTGRES_HOST,
-                port: +process.env.POSTGRES_PORT,
-                username: process.env.POSTGRES_USERNAME,
-                password: process.env.POSTGRES_PASSWORD,
-                database: process.env.POSTGRES_DATABASE_NAME,
+                host: config.get('POSTGRES_HOST'),
+                port: +config.get('POSTGRES_PORT'),
+                username: config.get('POSTGRES_USERNAME'),
+                password: config.get('POSTGRES_PASSWORD'),
+                database: config.get('POSTGRES_DATABASE_NAME'),
                 entities: [
                     User,
                 ],
