@@ -3,22 +3,18 @@ import { UsersService } from './services/users.service'
 import { UsersController } from './users.controller'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import 'dotenv/config'
-import { DataSource } from 'typeorm'
 import { User } from './entities/user.entity'
+import { TypeOrmModule } from '@nestjs/typeorm'
 
 @Module({
     imports: [
         ConfigModule.forRoot({
-            envFilePath: [ `@${process.env.NODE_ENV}.env`, '@.env' ]
+            envFilePath: [ `@${process.env.NODE_ENV}.env`, '@.env' ],
+            isGlobal: true,
         }),
-    ],
-    controllers: [ UsersController ],
-    providers: [
-        UsersService,
-        {
+        TypeOrmModule.forRootAsync({
             inject: [ ConfigService ],
-            provide: 'DATA_SOURCE',
-            useFactory: async (config: ConfigService) => new DataSource({
+            useFactory: async (config: ConfigService) => ({
                 type: 'postgres',
                 host: config.get('POSTGRES_HOST'),
                 port: +config.get('POSTGRES_PORT'),
@@ -29,13 +25,15 @@ import { User } from './entities/user.entity'
                     User,
                 ],
                 synchronize: true,
-            }).initialize()
-        },
-        {
-            provide: 'USER_REPO',
-            useFactory: (dataSource: DataSource) => dataSource.getRepository(User),
-            inject: [ 'DATA_SOURCE' ]
-        }
+            })
+        }),
+        TypeOrmModule.forFeature([
+            User,
+        ]),
+    ],
+    controllers: [ UsersController ],
+    providers: [
+        UsersService,
     ],
 })
 export class UsersModule {}

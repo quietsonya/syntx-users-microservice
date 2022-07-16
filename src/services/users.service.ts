@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import 'dotenv/config'
 import { User } from 'src/entities/user.entity'
 import { Repository } from 'typeorm'
@@ -9,13 +9,14 @@ import {
     DeleteUserRequest,
     UpdateUserRequest,
 } from '../users.pb'
+import { InjectRepository } from '@nestjs/typeorm'
 
 
 @Injectable()
 export class UsersService {
 
     constructor(
-        @Inject('USER_REPO') private readonly userRepo: Repository<User>
+        @InjectRepository(User) private readonly userRepo: Repository<User>
     ) {}
 
     public async getUserById({ userId }: UserByIdRequest): Promise<User> {
