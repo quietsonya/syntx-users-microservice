@@ -4,11 +4,11 @@ import {
     USERS_SERVICE_NAME,
     User as ProtoUser,
     UsersServiceController,
-    UserByIdRequest,
-    UserByEmailRequest,
     CreateUserRequest,
     UpdateUserRequest,
-    DeleteUserRequest
+    DeleteUserRequest,
+    UserId,
+    SearchUsersParams
 } from './users.pb'
 import { UsersService } from './services/users.service'
 import { concatMap, from, Observable } from 'rxjs'
@@ -20,18 +20,13 @@ export class UsersController implements UsersServiceController {
     private readonly usersService: UsersService
 
     @GrpcMethod(USERS_SERVICE_NAME, 'getUserById')
-    public getUserById(dto: UserByIdRequest): Observable<ProtoUser> {
+    public getUserById(dto: UserId): Observable<ProtoUser> {
         return from(this.usersService.getUserById(dto))
     }
 
-    @GrpcMethod(USERS_SERVICE_NAME, 'getUserByEmail')
-    public getUserByEmail(dto: UserByEmailRequest): Observable<ProtoUser> {
-        return from(this.usersService.getUserByEmail(dto))
-    }
-
-    @GrpcMethod(USERS_SERVICE_NAME, 'getUsers')
-    public getUsers(): Observable<ProtoUser> {
-        return from(this.usersService.getUsers()).pipe(concatMap(x => x))
+    @GrpcMethod(USERS_SERVICE_NAME, 'searchUsers')
+    public searchUsers(dto: SearchUsersParams): Observable<ProtoUser> {
+        return from(this.usersService.searchUsers(dto)).pipe(concatMap(x => x))
     }
 
     @GrpcMethod(USERS_SERVICE_NAME, 'createUser')

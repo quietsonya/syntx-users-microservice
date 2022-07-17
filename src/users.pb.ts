@@ -16,12 +16,16 @@ export interface User {
   salt: string;
 }
 
-export interface UserByIdRequest {
+export interface UserId {
   userId: string;
 }
 
-export interface UserByEmailRequest {
-  email: string;
+export interface SearchUsersParams {
+  email?: string | undefined;
+  username?: string | undefined;
+  usersIds: string[];
+  limit?: number | undefined;
+  offset?: number | undefined;
 }
 
 export interface CreateUserRequest {
@@ -46,11 +50,9 @@ export interface DeleteUserRequest {
 export const USERS_PACKAGE_NAME = "users";
 
 export interface UsersServiceClient {
-  getUsers(request: Void): Observable<User>;
+  getUserById(request: UserId): Observable<User>;
 
-  getUserById(request: UserByIdRequest): Observable<User>;
-
-  getUserByEmail(request: UserByEmailRequest): Observable<User>;
+  searchUsers(request: SearchUsersParams): Observable<User>;
 
   createUser(request: CreateUserRequest): Observable<User>;
 
@@ -60,14 +62,10 @@ export interface UsersServiceClient {
 }
 
 export interface UsersServiceController {
-  getUsers(request: Void): Observable<User>;
+  getUserById(request: UserId): Promise<User> | Observable<User> | User;
 
-  getUserById(
-    request: UserByIdRequest
-  ): Promise<User> | Observable<User> | User;
-
-  getUserByEmail(
-    request: UserByEmailRequest
+  searchUsers(
+    request: SearchUsersParams
   ): Promise<User> | Observable<User> | User;
 
   createUser(
@@ -86,9 +84,8 @@ export interface UsersServiceController {
 export function UsersServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      "getUsers",
       "getUserById",
-      "getUserByEmail",
+      "searchUsers",
       "createUser",
       "updateUser",
       "deleteUser",
