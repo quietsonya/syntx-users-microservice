@@ -9,7 +9,7 @@ export const protobufPackage = "eventbus";
 export interface Void {}
 
 export interface User {
-  id: string;
+  id?: string | undefined;
   email?: string | undefined;
   username?: string | undefined;
   password?: string | undefined;
