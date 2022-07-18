@@ -6,7 +6,7 @@ import 'dotenv/config'
 import { User } from './entities/user.entity'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ClientsModule, Transport } from '@nestjs/microservices'
-import { EVENTBUS_PACKAGE_NAME } from './users-events.pb'
+import { EVENTBUS_PACKAGE_NAME } from './pb/users-events.pb'
 import { join } from 'path'
 
 @Module({
