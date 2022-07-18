@@ -8,10 +8,15 @@ import {
     CreateUserRequest,
     DeleteUserRequest,
     UpdateUserRequest,
-} from '../users.pb'
+} from '../pb/users.pb'
 import { InjectRepository } from '@nestjs/typeorm'
-import { ClientGrpc } from '@nestjs/microservices'
-import { EVENTBUS_PACKAGE_NAME, UsersEventsServiceClient, USERS_EVENTS_SERVICE_NAME } from 'src/users-events.pb'
+import { ClientGrpc, RpcException } from '@nestjs/microservices'
+import {
+    EVENTBUS_PACKAGE_NAME,
+    UsersEventsServiceClient,
+    USERS_EVENTS_SERVICE_NAME,
+} from 'src/pb/users-events.pb'
+import { Status } from '@grpc/grpc-js/build/src/constants'
 
 
 @Injectable()
@@ -32,6 +37,10 @@ export class UsersService {
 
     public async getUserById({ userId }: UserId): Promise<User> {
         const user: User = await this.userRepo.findOneBy({ id: userId })
+        if (!user) {
+            user.id = userId
+            throw new RpcException({ code: Status.NOT_FOUND })
+        }
         this.usersEventsService.getUserByIdEvent(user)
         return user
     }
@@ -42,6 +51,10 @@ export class UsersService {
             email,
             username,
         } })
+        if (!users) {
+            users.forEach((user, index) => user.id = usersIds[index])
+            throw new RpcException({ code: Status.NOT_FOUND })
+        }
         this.usersEventsService.searchUsersEvent({
             searchParams: { usersIds, email, username },
             users
@@ -50,30 +63,42 @@ export class UsersService {
     }
 
     public async createUser(dto: CreateUserRequest): Promise<User> {
-        const user = new User()
-        user.email = dto.email
-        user.username = dto.username
-        user.password = dto.password
-        user.salt = dto.salt
-        await this.userRepo.save(user)
+        const user: User = await this.userRepo.save(dto)
+        if (!user) {
+            throw new RpcException({ code: Status.UNAVAILABLE })
+        }
         this.usersEventsService.createUserEvent(user)
         return user
     }
 
     public async updateUser(dto: UpdateUserRequest): Promise<User> {
-        const user = await this.userRepo.findOneBy({ id: dto.userId })
-        user.email = dto.email
-        user.username = dto.username
-        user.password = dto.password
-        user.salt = dto.salt
-        await this.userRepo.save(user)
-        this.usersEventsService.updateUserEvent(user)
+        const user: User = await this.userRepo.findOneBy({ id: dto.userId })
+        if (!user) {
+            throw new RpcException({ code: Status.NOT_FOUND })
+        }
+        user.email = dto.email || user.email
+        user.username = dto.username || user.username
+        user.password = dto.password || user.password
+        user.salt = dto.salt || user.salt
+        const updatedUser: User = await this.userRepo.save(user)
+        if (!updatedUser) {
+            updatedUser.id = dto.userId
+            throw new RpcException({ code: Status.UNAVAILABLE })
+        }
+        this.usersEventsService.updateUserEvent(updatedUser)
         return user
     }
 
     public async deleteUser({ userId }: DeleteUserRequest): Promise<User> {
         const user: User = await this.userRepo.findOneBy({ id: userId })
-        await this.userRepo.delete(user)
+        if (!user) {
+            throw new RpcException({ code: Status.NOT_FOUND })
+        }
+        const deletedUser: User = await this.userRepo.remove(user)
+        if (!deletedUser) {
+            deletedUser.id = userId
+            throw new RpcException({ code: Status.UNAVAILABLE })
+        }
         this.usersEventsService.deleteUserEvent(user)
         return user
     }

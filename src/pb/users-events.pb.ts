@@ -10,10 +10,10 @@ export interface Void {}
 
 export interface User {
   id: string;
-  email: string;
-  username: string;
-  password: string;
-  salt: string;
+  email?: string | undefined;
+  username?: string | undefined;
+  password?: string | undefined;
+  salt?: string | undefined;
 }
 
 export interface SearchUsersParams {

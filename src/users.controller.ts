@@ -9,7 +9,7 @@ import {
     DeleteUserRequest,
     UserId,
     SearchUsersParams
-} from './users.pb'
+} from './pb/users.pb'
 import { UsersService } from './services/users.service'
 import { concatMap, from, Observable } from 'rxjs'
 
