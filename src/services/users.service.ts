@@ -11,19 +11,19 @@ import {
 } from '../users.pb'
 import { InjectRepository } from '@nestjs/typeorm'
 import { ClientGrpc } from '@nestjs/microservices'
-import { CacheServiceClient, CACHE_PACKAGE_NAME, CACHE_SERVICE_NAME } from 'src/cache.pb'
+import { EVENTBUS_PACKAGE_NAME, UsersEventsServiceClient, USERS_EVENTS_SERVICE_NAME } from 'src/users-events.pb'
 
 
 @Injectable()
 export class UsersService {
 
-    private cacheService: CacheServiceClient
+    private usersEventsService: UsersEventsServiceClient
 
-    @Inject(CACHE_PACKAGE_NAME)
+    @Inject(EVENTBUS_PACKAGE_NAME)
     private readonly client: ClientGrpc
 
     onModuleInit(): void {
-        this.cacheService = this.client.getService<CacheServiceClient>(CACHE_SERVICE_NAME)
+        this.usersEventsService = this.client.getService<UsersEventsServiceClient>(USERS_EVENTS_SERVICE_NAME)
     }
 
     constructor(
@@ -32,23 +32,20 @@ export class UsersService {
 
     public async getUserById({ userId }: UserId): Promise<User> {
         const user: User = await this.userRepo.findOneBy({ id: userId })
-        this.cacheService.setCacheByKey({
-            key: {
-                packageName: CACHE_PACKAGE_NAME,
-                rpcMethod: 'getUserById',
-                rpcArg: JSON.stringify({ userId: user.id }),
-            },
-            data: JSON.stringify(user),
-        })
+        this.usersEventsService.getUserByIdEvent(user)
         return user
     }
 
     public async searchUsers({ usersIds, email, username }: SearchUsersParams): Promise<User[]> {
-        const users = this.userRepo.find({ where: {
+        const users: User[] = await this.userRepo.find({ where: {
             id: In(usersIds),
             email,
             username,
         } })
+        this.usersEventsService.searchUsersEvent({
+            searchParams: { usersIds, email, username },
+            users
+        })
         return users
     }
 
@@ -59,14 +56,7 @@ export class UsersService {
         user.password = dto.password
         user.salt = dto.salt
         await this.userRepo.save(user)
-        this.cacheService.setCacheByKey({
-            key: {
-                packageName: CACHE_PACKAGE_NAME,
-                rpcMethod: 'getUserById',
-                rpcArg: JSON.stringify({ userId: user.id }),
-            },
-            data: JSON.stringify(user),
-        })
+        this.usersEventsService.createUserEvent(user)
         return user
     }
 
@@ -76,26 +66,15 @@ export class UsersService {
         user.username = dto.username
         user.password = dto.password
         user.salt = dto.salt
-        this.cacheService.setCacheByKey({
-            key: {
-                packageName: CACHE_PACKAGE_NAME,
-                rpcMethod: 'getUserById',
-                rpcArg: JSON.stringify({ userId: user.id }),
-            },
-            data: JSON.stringify(user),
-        })
         await this.userRepo.save(user)
+        this.usersEventsService.updateUserEvent(user)
         return user
     }
 
     public async deleteUser({ userId }: DeleteUserRequest): Promise<User> {
         const user: User = await this.userRepo.findOneBy({ id: userId })
-        this.cacheService.delCacheByKey({
-            packageName: CACHE_PACKAGE_NAME,
-            rpcMethod: 'getUserById',
-            rpcArg: JSON.stringify({ userId: user.id }),
-        })
         await this.userRepo.delete(user)
+        this.usersEventsService.deleteUserEvent(user)
         return user
     }
 
