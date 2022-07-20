@@ -12,6 +12,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { ClientGrpc, RpcException } from '@nestjs/microservices'
 import {
+    Error,
     EVENTBUS_PACKAGE_NAME,
     UsersEventsServiceClient,
     USERS_EVENTS_SERVICE_NAME,
@@ -36,70 +37,135 @@ export class UsersService {
     ) {}
 
     public async getUserById({ userId }: UserId): Promise<User> {
-        const user: User = await this.userRepo.findOneBy({ id: userId })
+        const user: User = await this.userRepo
+            .findOneBy({ id: userId })
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.getUserByIdEvent({ error, user: { id: userId } })
+                throw new RpcException(error)
+            })
         if (!user) {
-            user.id = userId
-            throw new RpcException({ code: Status.NOT_FOUND })
+            const error: Error = {
+                code: Status.NOT_FOUND,
+                message: 'User not found',
+            }
+            this.usersEventsService.getUserByIdEvent({ error, user: { id: userId } })
+            throw new RpcException(error)
         }
-        this.usersEventsService.getUserByIdEvent(user)
+        this.usersEventsService.getUserByIdEvent({ user })
         return user
     }
 
-    public async searchUsers({ usersIds, email, username }: SearchUsersParams): Promise<User[]> {
-        const users: User[] = await this.userRepo.find({ where: {
-            id: In(usersIds),
-            email,
-            username,
-        } })
-        if (!users) {
-            users.forEach((user, index) => user.id = usersIds[index])
-            throw new RpcException({ code: Status.NOT_FOUND })
-        }
-        this.usersEventsService.searchUsersEvent({
-            searchParams: { usersIds, email, username },
-            users
-        })
+    public async searchUsers(searchParams: SearchUsersParams): Promise<User[]> {
+        const users: User[] = await this.userRepo
+            .find({
+                where: {
+                    id: In(searchParams.usersIds),
+                    email: searchParams.email,
+                    username: searchParams.username,
+                },
+                take: searchParams.limit,
+                skip: searchParams.offset,
+            })
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.searchUsersEvent({ error, users: [], searchParams })
+                throw new RpcException(error)
+            })
+        this.usersEventsService.searchUsersEvent({ users, searchParams })
         return users
     }
 
     public async createUser(dto: CreateUserRequest): Promise<User> {
-        const user: User = await this.userRepo.save(dto)
-        if (!user) {
-            throw new RpcException({ code: Status.UNAVAILABLE })
-        }
-        this.usersEventsService.createUserEvent(user)
+        const user: User = await this.userRepo
+            .save(dto)
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.updateUserEvent({ error, user: dto })
+                throw new RpcException(error)
+            })
+        this.usersEventsService.createUserEvent({ user })
         return user
     }
 
     public async updateUser(dto: UpdateUserRequest): Promise<User> {
-        const user: User = await this.userRepo.findOneBy({ id: dto.userId })
+        const user: User = await this.userRepo
+            .findOneBy({ id: dto.userId })
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.updateUserEvent({ error, user: { ...dto, id: dto.userId, } })
+                throw new RpcException(error)
+            })
         if (!user) {
-            throw new RpcException({ code: Status.NOT_FOUND })
+            const error: Error = {
+                code: Status.NOT_FOUND,
+                message: 'User not found',
+            }
+            this.usersEventsService.updateUserEvent({ error, user })
+            throw new RpcException(error)
         }
+
         user.email = dto.email || user.email
         user.username = dto.username || user.username
         user.password = dto.password || user.password
         user.salt = dto.salt || user.salt
-        const updatedUser: User = await this.userRepo.save(user)
-        if (!updatedUser) {
-            updatedUser.id = dto.userId
-            throw new RpcException({ code: Status.UNAVAILABLE })
-        }
-        this.usersEventsService.updateUserEvent(updatedUser)
+        await this.userRepo
+            .save(user)
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.updateUserEvent({ error, user })
+                throw new RpcException(error)
+            })
+
+        this.usersEventsService.updateUserEvent({ user })
         return user
     }
 
     public async deleteUser({ userId }: DeleteUserRequest): Promise<User> {
-        const user: User = await this.userRepo.findOneBy({ id: userId })
+        const user: User = await this.userRepo
+            .findOneBy({ id: userId })
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.deleteUserEvent({ error, user: { id: userId } })
+                throw new RpcException(error)
+            })
         if (!user) {
-            throw new RpcException({ code: Status.NOT_FOUND })
+            const error: Error = {
+                code: Status.NOT_FOUND,
+                message: 'User not found',
+            }
+            this.usersEventsService.deleteUserEvent({ error, user: { id: userId } })
+            throw new RpcException(error)
         }
-        const deletedUser: User = await this.userRepo.remove(user)
-        if (!deletedUser) {
-            deletedUser.id = userId
-            throw new RpcException({ code: Status.UNAVAILABLE })
-        }
-        this.usersEventsService.deleteUserEvent(user)
+        await this.userRepo
+            .remove(user)
+            .catch(err => {
+                const error: Error = {
+                    code: Status.UNAVAILABLE,
+                    message: err,
+                }
+                this.usersEventsService.deleteUserEvent({ error, user })
+                throw new RpcException(error)
+            })
+        this.usersEventsService.deleteUserEvent({ user })
         return user
     }
 

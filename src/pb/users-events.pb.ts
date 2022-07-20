@@ -3,10 +3,14 @@ import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import Long from "long";
 import * as _m0 from "protobufjs/minimal";
 import { Observable } from "rxjs";
+import { Empty } from "./google/protobuf/empty.pb";
 
 export const protobufPackage = "eventbus";
 
-export interface Void {}
+export interface Error {
+  code: number;
+  message: string;
+}
 
 export interface User {
   id?: string | undefined;
@@ -14,6 +18,11 @@ export interface User {
   username?: string | undefined;
   password?: string | undefined;
   salt?: string | undefined;
+}
+
+export interface UserEvent {
+  error?: Error | undefined;
+  user: User | undefined;
 }
 
 export interface SearchUsersParams {
@@ -25,6 +34,7 @@ export interface SearchUsersParams {
 }
 
 export interface SearchUsersEvent {
+  error?: Error | undefined;
   searchParams: SearchUsersParams | undefined;
   users: User[];
 }
@@ -32,29 +42,27 @@ export interface SearchUsersEvent {
 export const EVENTBUS_PACKAGE_NAME = "eventbus";
 
 export interface UsersEventsServiceClient {
-  getUserByIdEvent(request: User): Observable<Void>;
+  getUserByIdEvent(request: UserEvent): Observable<Empty>;
 
-  searchUsersEvent(request: SearchUsersEvent): Observable<Void>;
+  searchUsersEvent(request: SearchUsersEvent): Observable<Empty>;
 
-  createUserEvent(request: User): Observable<Void>;
+  createUserEvent(request: UserEvent): Observable<Empty>;
 
-  updateUserEvent(request: User): Observable<Void>;
+  updateUserEvent(request: UserEvent): Observable<Empty>;
 
-  deleteUserEvent(request: User): Observable<Void>;
+  deleteUserEvent(request: UserEvent): Observable<Empty>;
 }
 
 export interface UsersEventsServiceController {
-  getUserByIdEvent(request: User): Promise<Void> | Observable<Void> | Void;
+  getUserByIdEvent(request: UserEvent): void;
 
-  searchUsersEvent(
-    request: SearchUsersEvent
-  ): Promise<Void> | Observable<Void> | Void;
+  searchUsersEvent(request: SearchUsersEvent): void;
 
-  createUserEvent(request: User): Promise<Void> | Observable<Void> | Void;
+  createUserEvent(request: UserEvent): void;
 
-  updateUserEvent(request: User): Promise<Void> | Observable<Void> | Void;
+  updateUserEvent(request: UserEvent): void;
 
-  deleteUserEvent(request: User): Promise<Void> | Observable<Void> | Void;
+  deleteUserEvent(request: UserEvent): void;
 }
 
 export function UsersEventsServiceControllerMethods() {
