@@ -75,7 +75,11 @@ export class UsersService {
                     code: Status.UNAVAILABLE,
                     message: err,
                 }
-                this.usersEventsService.searchUsersEvent({ error, users: [], searchParams })
+                this.usersEventsService.searchUsersEvent({
+                    error,
+                    users: searchParams.usersIds.map(id => ({ id })),
+                    searchParams
+                })
                 throw new RpcException(error)
             })
         this.usersEventsService.searchUsersEvent({ users, searchParams })
