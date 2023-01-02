@@ -94,7 +94,7 @@ export class UsersService {
                     code: Status.UNAVAILABLE,
                     message: err,
                 }
-                this.usersEventsService.updateUserEvent({ error, user: dto })
+                this.usersEventsService.createUserEvent({ error, user: dto })
                 throw new RpcException(error)
             })
         this.usersEventsService.createUserEvent({ user })
